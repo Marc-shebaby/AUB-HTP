@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from aub_htp import generate_alpha_stable_pdf
 
-alpha = 1.4
-beta = 0.9
-gamma = 0.5
-delta = 1
+alpha = 2
+beta = 1
+gamma = 3
+delta = 2
 
 x_vals = np.linspace(-10, 10, 4000)
 y = generate_alpha_stable_pdf(x_vals, alpha, beta, gamma, delta)

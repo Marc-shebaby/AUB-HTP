@@ -1,8 +1,10 @@
+import numpy as np
+from pathlib import Path
+from scipy.interpolate import RegularGridInterpolator
+from scipy.integrate import quad_vec
+
 from .skorohod import skorohod_formula_1, skorohod_formula_3
 from .zolotarev import generate_pdf_zolotarev_1, generate_pdf_NolanS0
-import numpy as np
-import pickle
-from scipy.integrate import quad_vec
 
 
 def remove_left_monotonicity_spikes(x_vals, pdf_vals):
@@ -78,18 +80,30 @@ def normalize_inputs(X, alpha, beta, gamma, delta):
     return Z, shift
 
 
-from importlib.resources import files as _res_files
-from pathlib import Path
-import pickle
-
-
-def _load_pickle(name: str):
+def load_interpolator(name: str) -> RegularGridInterpolator:
     """
-    Load an installed pickle resource.
-    Expects package data under 'generate_stable_pdf.data'.
+    Load a RegularGridInterpolator from an npz file.
+    
+    The npz file should contain:
+    - grid_0, grid_1: 1D arrays defining the interpolation grid axes
+    - values: 2D array of values on the grid
+    - method: interpolation method (e.g. 'linear')
+    - bounds_error: whether to raise error for out-of-bounds
+    - fill_value: value for out-of-bounds points
+    - fill_value_is_none: whether fill_value should be None
     """
-    with open(Path(__file__).parent / "data" / name, 'rb') as f:
-        return pickle.load(f)
+    npz_path = Path(__file__).parent / "data" / name
+    data = np.load(npz_path, allow_pickle=True)
+    
+    fill_val = None if data['fill_value_is_none'].item() else data['fill_value'].item()
+    
+    return RegularGridInterpolator(
+        (data['grid_0'], data['grid_1']),
+        data['values'],
+        method=str(data['method']),
+        bounds_error=data['bounds_error'].item(),
+        fill_value=fill_val
+    )
 
 
 def generate_pdf_alpha_less_1(X, alpha, beta):
@@ -103,8 +117,8 @@ def generate_pdf_alpha_less_1(X, alpha, beta):
     - Handle x<0 by reflection with beta -> -beta.
     - Force pdf(0)=0 when beta is ±1 (one-sided support in the limit).
     """
-    lowest_x_skorohod_fn = _load_pickle("skorohod_1_interpolator_x_min.pkl")
-    lowest_x_zolotarev_fn = _load_pickle("zolotarev_interpolator_x_min_alpha_less_1.pkl")
+    lowest_x_skorohod_fn = load_interpolator("skorohod_1_interpolator_x_min.npz")
+    lowest_x_zolotarev_fn = load_interpolator("zolotarev_interpolator_x_min_alpha_less_1.npz")
     pdf = np.zeros_like(X)
 
     # Right side (x >= 0)
@@ -188,8 +202,8 @@ def generate_pdf_alpha_greater_1(X, alpha, beta):
       • Optional Zolotarev region; near α≈1 prefer S0 for stability
     - For x<0 reflect with beta -> -beta and reuse logic.
     """
-    lowest_x_skorohod_fn = _load_pickle("skorohod_3_interpolator_x_min.pkl")
-    lowest_x_zolotarev_fn = _load_pickle("zolotarev_interpolator_x_min_alpha_greater_1.pkl")
+    lowest_x_skorohod_fn = load_interpolator("skorohod_3_interpolator_x_min.npz")
+    lowest_x_zolotarev_fn = load_interpolator("zolotarev_interpolator_x_min_alpha_greater_1.npz")
 
     pdf = np.zeros_like(X)
 
