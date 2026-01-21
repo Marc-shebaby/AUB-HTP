@@ -3,18 +3,28 @@ from typing import Callable
 
 from scipy.optimize import fsolve, brentq
 from scipy.stats import levy_stable
+from scipy.interpolate import interp1d
 from scipy import special
-import json
 from pathlib import Path
 
-lookup_table_entropy: dict[float, float] | None = None
+_entropy_interpolator: interp1d | None = None
 
-def _load_entropy_lookup() -> dict[float, float]:
-    global lookup_table_entropy
-    if lookup_table_entropy is None:
-        with open(Path(__file__).parent / "lookup_table_entropy.json", "r") as f:
-            lookup_table_entropy = json.load(f)
-    return lookup_table_entropy
+def _entropy_lookup(alpha: float) -> float:
+    """
+    Look up entropy value for given alpha using interpolation.
+    Uses a precomputed 1D interpolator loaded from npz file.
+    """
+    global _entropy_interpolator
+    if _entropy_interpolator is None:
+        data = np.load(Path(__file__).parent.parent / "data" / "entropy_interpolator.npz")
+        _entropy_interpolator = interp1d(
+            data['alpha'], 
+            data['entropy'], 
+            kind='linear', 
+            bounds_error=False, 
+            fill_value='extrapolate'
+        )
+    return float(_entropy_interpolator(alpha))
 
 def _solve_for_function_equal_zero(
     function: Callable[[float], float],
@@ -46,9 +56,8 @@ def _solve_for_function_equal_zero(
     return np.exp(s_sol)
 
 def _h_Z_tilde_1d(alpha: float, gamma_ref: float) -> float:
-    h_lookup = _load_entropy_lookup()#TODO: what if alpha is not in the lookup table? should we look for the closest value or terminate the program?
     #TODO: what if alpha is not in the lookup table? should we look for the closest value or terminate the program?
-    return float(h_lookup[alpha]) + np.log(gamma_ref) 
+    return float(_entropy_lookup(alpha)) + np.log(gamma_ref)
 
 def _neglogpdf_alpha_1d(z: np.ndarray, alpha: float, gamma_ref: float) -> np.ndarray:
     """

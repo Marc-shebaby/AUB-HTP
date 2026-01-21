@@ -324,7 +324,7 @@ def alpha_stable_pdf_core(X, alpha, beta, gamma, delta, ):
     return pdf / gamma
 
 
-def generate_alpha_stable_pdf(X, alpha, beta, gamma, delta, pad_left=10, pad_right=10, growth=1.05):
+def generate_alpha_stable_pdf(X, alpha, beta, gamma, delta, pad_left=10, pad_right=10, growth=1.05): # TODO: add random_state
     """
     Public pdf wrapper with boundary padding and spike cleanup.
     Pipeline:

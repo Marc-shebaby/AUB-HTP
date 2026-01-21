@@ -1,14 +1,14 @@
 import numpy as np
+from numpy.typing import ArrayLike
 from .estimate_power import estimate_power
 from scipy.optimize import minimize
-
 
 def estimate_location(
     a: np.ndarray,
     alpha: float,
     *,
-    maxiter: int = 2000,
-) -> np.ArrayLike:
+    maxiter: int = 100,
+) -> ArrayLike:
     """
     Estimate the location L_X = argmin_μ P_alpha(X - μ) for 1-D and d-D data a 
     sampled from X ~ S(alpha, beta, gamma, delta).
@@ -36,7 +36,8 @@ def estimate_location(
     if not (0 < alpha <= 2):
         raise ValueError("alpha must be in (0, 2].")
 
-    if a.ndim == 1:
+    a_is_not_multidimentional = a.ndim == 1
+    if a_is_not_multidimentional:
         a = a[:, None]
 
     if a.ndim != 2:
@@ -48,7 +49,10 @@ def estimate_location(
         lambda mu_vec: estimate_power(a - mu_vec, alpha=alpha), 
         x0=np.median(a, axis=0), 
         method="Powell", 
-        options={"maxiter":maxiter}
+        options={
+            "maxiter":maxiter,
+            "disp":True
+        },
     )
     mu_star = np.array(res.x, float)
-    return mu_star
+    return mu_star[0] if a_is_not_multidimentional else mu_star
