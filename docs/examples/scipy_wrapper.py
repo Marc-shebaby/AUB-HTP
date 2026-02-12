@@ -1,15 +1,19 @@
 import numpy as np
+import aub_htp as ht
 import matplotlib.pyplot as plt
-from aub_htp import generate_alpha_stable_pdf
+from scipy.stats import norm
+dist = ht.alpha_stable()
 
-alpha = 0.999999999
-beta = 1
-gamma = 1
-delta = 0
+alpha = 1
+beta = 0.7
+gamma = 2
+delta = 1.5
 
-x_vals = np.linspace(-10, 10, 10000)
-y = generate_alpha_stable_pdf(x_vals, alpha, beta, gamma, delta)
+x_vals = np.linspace(-10, 10, 30)
+y = dist.pdf(x_vals, alpha, beta, scale = gamma, loc = delta)
 
+print(x_vals)
+print(y)
 # Plotting
 
 plt.plot(x_vals, y, label="Custom Stable PDF", linewidth=2)
