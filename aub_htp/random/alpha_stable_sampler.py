@@ -6,8 +6,9 @@ def sample_alpha_stable_vector(
     alpha: float,
     spectral_measure: BaseSpectralMeasureSampler,
     number_of_samples: int,
-    number_of_convergence_terms: int = 100,
+    number_of_convergence_terms: int | None = None,
 ):
+    number_of_convergence_terms = number_of_convergence_terms or 100#TODO: Document the error better
     d = spectral_measure.dimensions()
     x = np.zeros((number_of_samples, d))
 
@@ -26,6 +27,9 @@ def sample_alpha_stable_vector(
 
 
 def _c(alpha):
+    #TODO:
+    # 1. alpha = 2 is undefined
+    # 2. add mass
     return _kappa(alpha) ** (-1 / alpha)
 
 def _kappa(alpha):

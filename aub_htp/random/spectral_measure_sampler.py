@@ -6,7 +6,6 @@ class BaseSpectralMeasureSampler(ABC):
     '''
     A Spectral Measure Sampler is as an interface which defines:
         - self.sample(): sampling algorithm (self.sample)
-        - self.mass(): the mass of the spectral measure
         - self.dimensions(): the number of dimensions of the spectral measure
     '''
 
@@ -23,18 +22,29 @@ class IsotropicSampler(BaseSpectralMeasureSampler):
 
     def __init__(self,
         number_of_dimensions: int,
-        mass: float
+        alpha: float,
+        gamma: float = 1.0,
     ):
         self.number_of_dimensions = number_of_dimensions
-        self.mass = mass
+        self.alpha = alpha
+        self.gamma = gamma
 
     def sample(self, number_of_samples: int) -> np.ndarray:
         X = np.random.normal(size=(number_of_samples, self.number_of_dimensions))
         X /= np.linalg.norm(X, axis=1, keepdims=True)
-        return X * np.sqrt(self.mass)
+        return X * self.gamma # self.__class__.isotropic_scale_correction(self.dimensions(), self.alpha, self.gamma) #TODO: Fix this mess
 
     def dimensions(self) -> int:
         return self.number_of_dimensions
+
+    @staticmethod
+    def isotropic_scale_correction(d, alpha, gamma_scale):
+        m_d_alpha = (
+                gamma((alpha + 1) / 2)
+                * gamma(d / 2)
+                / (np.sqrt(np.pi) * gamma((d + alpha) / 2))
+        )
+        return gamma_scale * (m_d_alpha ** (-1.0 / alpha))
 
 
 class EllipticSampler(BaseSpectralMeasureSampler):
@@ -101,3 +111,26 @@ class MixedSampler(BaseSpectralMeasureSampler):
 
     def dimensions(self) -> int:
         return self.number_of_dimensions
+
+
+class UnivariateSampler(BaseSpectralMeasureSampler):
+
+    def __init__(self,
+        alpha: float,
+        beta: float,
+    ):
+        self.alpha = alpha
+        self.beta = beta
+
+    def sample(self, number_of_samples: int) -> np.ndarray:
+        p_plus = (1.0 + self.beta) / 2.0
+        signs = np.where(
+            np.random.rand(number_of_samples) <= p_plus,
+            1.0,
+            -1.0
+        ).reshape(-1, 1) # reshape to (n, 1) since framework expects vectors
+
+        return signs
+
+    def dimensions(self) -> int:
+        return 1

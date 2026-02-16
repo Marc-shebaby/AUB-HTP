@@ -37,11 +37,12 @@ def Sample_Univariate_LePage(alpha, beta, gamma, delta, k, N, M):
             return (gamma * X) + delta
         else:
             return gamma * (X - (beta * np.tan((np.pi * alpha) / 2))) + delta
+            return (gamma * X) + delta - (beta * np.tan((np.pi * alpha) / 2))
     else:
         # Type 1 Parametrization
         if k == 1:
             if abs(alpha - 1) <= 1e-12:
-                return (gamma * X) + (delta + (beta * (2 / np.pi) * gamma * np.log(gamma)))
+                return (gamma * X) + delta + (beta * (2 / np.pi) * gamma * np.log(gamma))
             else:
                 return (gamma * X) + delta
     return X

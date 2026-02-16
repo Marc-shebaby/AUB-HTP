@@ -7,6 +7,7 @@ from scipy.stats._multivariate import multi_rv_generic
 from scipy.stats._distn_infrastructure import _ShapeInfo
 
 from .pdf import generate_alpha_stable_pdf
+from .random import sample_alpha_stable_vector, IsotropicSampler, UnivariateSampler, BaseSpectralMeasureSampler
 
 
 class alpha_stable_gen(rv_continuous):
@@ -36,19 +37,22 @@ class alpha_stable_gen(rv_continuous):
         # location for S1 parameterization
         (alpha, beta), delta, gamma = self._parse_args(*args, **kwds)
 
-        if self.parameterization == "S0" or self.parameterization == "S1" and np.all(alpha != 1): #TODO: multiple but different alpha?
+        if self.parameterization == "S0":
             return super().pdf(x, *args, **kwds)
 
         elif self.parameterization == "S1":
-            _kwds = kwds.copy()
-            _kwds.pop("loc", None)
-            return super().pdf(x, *args,
-                               loc = delta + (2 / np.pi) * beta * gamma * np.log(gamma), # Fix location
-                               **_kwds)
+            if np.all(alpha != 1):
+                _kwds = kwds.copy()
+                _kwds.pop("loc", None)
+                return super().pdf(x, *args,
+                                   loc = self._get_shift_term(alpha, beta, gamma, delta, self.parameterization),
+                                   **_kwds)
+            else:
+                raise NotImplementedError() #TODO: multiple but different alpha?
         else:
             raise AssertionError("Unknown parametrization type")
 
-    def _pdf(self, x, alpha, beta):
+    def _pdf(self, x, alpha, beta): #TODO: broadcast alpha and beta to x.shape
         x = np.asarray(x).ravel()
         alpha = np.asarray(alpha).ravel()
         beta = np.asarray(beta).ravel()
@@ -69,9 +73,49 @@ class alpha_stable_gen(rv_continuous):
         return (0 < alpha) & (alpha <= 2) & (-1 <= beta) & (beta <= 1)
 
 
-    def _rvs(self, alpha, beta, size, random_state):
-        raise NotImplementedError()
+    def _rvs(self, alpha, beta, size=None, random_state=None):
+        # size is shape
+        #TODO:
+        # 1. Integrate beta into sample_alpha_stable_vector
+        # 2. Make sure `size` parameter is fine
+        # 3. test
+        alpha = np.broadcast_to(alpha, size)
+        beta = np.broadcast_to(beta, size)
+        if np.all(alpha == alpha[0]) and np.all(beta == beta[0]):
+            sampler = UnivariateSampler(alpha[0], beta[0])
+            samples = sample_alpha_stable_vector(alpha[0], sampler, int(np.prod(size)))
+            samples = samples.reshape(size)
+            return samples
+        else:
+            #TODO: Test
+            alpha_ = alpha.ravel()
+            beta_ = beta.ravel()
+            size = alpha_.shape[0]
+            return np.asarray([self._rvs(alpha_[i], beta_[i], size) for i in range(size)])
 
+
+    #def rvs(self): #TODO: similar wrapper to .pdf
+    #    pass
+
+    def _get_shift_term(self, alpha: float, beta: float, gamma: float, delta: float, parameterization: Literal["S0", "S1"] | None = None):
+        parameterization = parameterization or self.parameterization
+        if parameterization == "S0":
+            return delta
+        elif parameterization == "S1":
+            if alpha != 1:
+                return delta
+            else:
+                return delta + (2 / np.pi) * beta * gamma * np.log(gamma)
+        else:
+            raise AssertionError("Unknown parametrization type")
 
 class multi_variate_alpha_stable(multi_rv_generic):
-    pass
+    def rvs(self,
+        alpha: float,
+        spectral_measure_sampler: BaseSpectralMeasureSampler,
+        random_state: None | int | np.random.RandomState | np.random.Generator
+    ):
+        # TODO:
+        # 1. figure out what to do with random_state
+        # 2. test
+        return sample_alpha_stable_vector(alpha, spectral_measure_sampler, 1)[0]
