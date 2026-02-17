@@ -22,17 +22,15 @@ def sample_alpha_stable_vector(
 
         x += spectral_measure_samples * weights[:, None]
 
-    x *= _c(alpha)
+    x *= _c(alpha, spectral_measure.mass())
     return x
 
 
-def _c(alpha):
-    #TODO:
-    # 1. alpha = 2 is undefined
-    # 2. add mass
-    return _kappa(alpha) ** (-1 / alpha)
+def _c(alpha: float, mass: float):
+    #TODO: alpha = 2 is undefined
+    return (_kappa(alpha)/mass) ** (-1 / alpha)
 
-def _kappa(alpha):
+def _kappa(alpha: float):
     if abs(alpha - 1.0) < 1e-12:
         return np.pi / 2
     return gamma(2 - alpha) * np.cos(np.pi * alpha / 2) / (1 - alpha)

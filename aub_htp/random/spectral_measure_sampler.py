@@ -17,13 +17,17 @@ class BaseSpectralMeasureSampler(ABC):
     def dimensions(self) -> int:
         pass
 
+    @abstractmethod
+    def mass(self) -> float:
+        pass
+
 
 class IsotropicSampler(BaseSpectralMeasureSampler):
 
     def __init__(self,
         number_of_dimensions: int,
         alpha: float,
-        gamma: float = 1.0,
+        gamma: float,
     ):
         self.number_of_dimensions = number_of_dimensions
         self.alpha = alpha
@@ -32,29 +36,26 @@ class IsotropicSampler(BaseSpectralMeasureSampler):
     def sample(self, number_of_samples: int) -> np.ndarray:
         X = np.random.normal(size=(number_of_samples, self.number_of_dimensions))
         X /= np.linalg.norm(X, axis=1, keepdims=True)
-        return X * self.gamma # self.__class__.isotropic_scale_correction(self.dimensions(), self.alpha, self.gamma) #TODO: Fix this mess
+        return X * self.gamma #TODO: fix
 
     def dimensions(self) -> int:
         return self.number_of_dimensions
 
-    @staticmethod
-    def isotropic_scale_correction(d, alpha, gamma_scale):
-        m_d_alpha = (
-                gamma((alpha + 1) / 2)
-                * gamma(d / 2)
-                / (np.sqrt(np.pi) * gamma((d + alpha) / 2))
-        )
-        return gamma_scale * (m_d_alpha ** (-1.0 / alpha))
-
+    def mass(self) -> float:
+        return 1 #TODO: fix
 
 class EllipticSampler(BaseSpectralMeasureSampler):
 
     def __init__(self,
         number_of_dimensions: int,
-        sigma: np.ndarray
+        alpha: float,
+        sigma: np.ndarray,
+        mass: float | None = None,
     ):
         self.number_of_dimensions = number_of_dimensions
+        self.alpha = alpha
         self.sigma = np.asarray(sigma)
+        self._mass = mass or self._estimate_mass()
 
     def sample(self, number_of_samples: int) -> np.ndarray:
         X = np.random.normal(size=(number_of_samples, self.number_of_dimensions))
@@ -65,8 +66,19 @@ class EllipticSampler(BaseSpectralMeasureSampler):
     def dimensions(self) -> int:
         return self.number_of_dimensions
 
+    def mass(self) -> float:
+        return self._mass
+
+    def _estimate_mass(self, number_of_samples_taken_for_accuracy: int = 100):
+        U = np.random.normal(size=(number_of_samples_taken_for_accuracy, self.dimentions()))
+        U /= np.linalg.norm(U, axis=1, keepdims=True)
+        L = np.linalg.cholesky(self.sigma)
+        norms = np.linalg.norm(U @ L.T, axis=1) ** self.alpha
+        return np.mean(norms)
+
 
 class DiscreteSampler(BaseSpectralMeasureSampler):
+
     def __init__(self,
         positions: np.ndarray,
         weights: np.ndarray
@@ -75,6 +87,7 @@ class DiscreteSampler(BaseSpectralMeasureSampler):
         self.weights = np.asarray(weights)
         assert self.positions.shape[0] == self.weights.shape[0] and self.positions.shape[0] > 0
         self.number_of_dimensions = self.positions.shape[1]
+        self._mass = self.weights.sum()
 
     def sample(self, number_of_samples: int) -> np.ndarray:
         indices = np.random.choice(len(self.weights), size=number_of_samples, p=self.weights / self.weights.sum())
@@ -83,8 +96,12 @@ class DiscreteSampler(BaseSpectralMeasureSampler):
     def dimensions(self) -> int:
         return self.number_of_dimensions
 
+    def mass(self) -> float:
+        return self._mass
+
 
 class MixedSampler(BaseSpectralMeasureSampler):
+
     def __init__(self,
         spectral_measures: list[BaseSpectralMeasureSampler],
         weights: np.ndarray,
@@ -96,6 +113,7 @@ class MixedSampler(BaseSpectralMeasureSampler):
         self.number_of_dimensions = spectral_measures[0].dimensions()
         self.spectral_measures = spectral_measures
         self.weights = np.asarray(weights)
+        self._mass = self._calculate_mass()
 
     def sample(self, number_of_samples: int) -> np.ndarray:
         weights = self.weights / self.weights.sum()
@@ -112,6 +130,14 @@ class MixedSampler(BaseSpectralMeasureSampler):
     def dimensions(self) -> int:
         return self.number_of_dimensions
 
+    def mass(self) -> float:
+        return float(self._mass)
+
+    def _calculate_mass(self):
+        return np.mean(
+            spectral_measure.mass() * weight
+                for spectral_measure, weight in zip(self.spectral_measures, self.weights)
+        )
 
 class UnivariateSampler(BaseSpectralMeasureSampler):
 
@@ -128,9 +154,11 @@ class UnivariateSampler(BaseSpectralMeasureSampler):
             np.random.rand(number_of_samples) <= p_plus,
             1.0,
             -1.0
-        ).reshape(-1, 1) # reshape to (n, 1) since framework expects vectors
-
+        ).reshape(-1, 1) # reshape to (n, 1) since we expect vectors
         return signs
 
     def dimensions(self) -> int:
         return 1
+
+    def mass(self) -> float:
+        return 1 #TODO: fix
