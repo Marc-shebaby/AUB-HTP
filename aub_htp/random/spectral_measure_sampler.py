@@ -171,7 +171,7 @@ class UnivariateSampler(BaseSpectralMeasureSampler):
         random_state = get_random_state_generator(random_state)
         p_plus = (1.0 + self.beta) / 2.0
         signs = np.where(
-            random_state.rand(number_of_samples) <= p_plus,
+            random_state.random(number_of_samples) <= p_plus,
             1.0,
             -1.0
         ).reshape(-1, 1) # reshape to (n, 1) since we expect vectors
@@ -180,7 +180,7 @@ class UnivariateSampler(BaseSpectralMeasureSampler):
     def dimensions(self) -> int:
         return 1
 
-    def mass(self) ->float:
+    def mass(self) -> float:
         return self.gamma**(self.alpha)   
 
 
