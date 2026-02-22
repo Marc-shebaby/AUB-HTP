@@ -37,7 +37,8 @@ ht.alpha_stable.with_parametrization("S0")
 y = ht.alpha_stable.pdf(x, alpha = 0.4, beta = 0.8, loc = 2, scale = 3)
 ```
 
-// TODO: Plot of each parametrization
+![docs/examples/plot_parametrizations.png](docs/examples/plot_parametrizations.png)
+
 #### Random Variable Sampling (RVS)
 ```python
 import aub_htp as ht
@@ -60,7 +61,7 @@ print(samples)
 #  [259.96755723   0.6227459  118.69956139   3.63961872   3.45083368]]
 ```
 
-// TODO: Plot
+![docs/examples/plot_univariate_sampling.png](docs/examples/plot_univariate_sampling.png)
 
 ### Multivariate Alpha Stable Distributions
 
@@ -101,7 +102,7 @@ Example 2: Sampling from a mixed spectral measure.
 import aub_htp as ht
 from aub_htp.random import IsotropicSampler, EllipticSampler, DiscreteSampler, MixedSampler
 
-alpha = 1.2
+alpha = 0.6
 
 isotropic = IsotropicSampler(number_of_dimensions = 2 , alpha = alpha, gamma = 2)
 elliptic = EllipticSampler(number_of_dimensions = 2, alpha = alpha, sigma = [[10, 2], 
@@ -110,12 +111,10 @@ discrete = DiscreteSampler(positions = [[0, 1], [-1, 0]],  weights = [0.2, 0.8])
 
 mixed = MixedSampler(spectral_measures = [isotropic, elliptic, discrete], weights = [0.4, 0.4, 0.2])
 
-samples = ht.multivariate_alpha_stable.rvs(alpha = 1.2, spectral_measure_sampler = mixed, shift = [4, 2], size = 10)
+samples = ht.multivariate_alpha_stable.rvs(alpha = alpha, spectral_measure_sampler = mixed, shift = [4, 2], size = 10)
 
 print(samples)
 ```
-
-
 
 #### Custom Spectral Measures
 
@@ -152,6 +151,7 @@ class ButterflySampler(BaseSpectralMeasureSampler):
 
 samples = ht.multivariate_alpha_stable.rvs(alpha = 0.8, spectral_measure_sampler=ButterflySampler(), size = 10000)
 ```
-// TODO: add plot
+
+![docs/examples/plot_multivariate_sampling.png](docs/examples/plot_multivariate_sampling.png)
 
 ### Papers and Further Readings
