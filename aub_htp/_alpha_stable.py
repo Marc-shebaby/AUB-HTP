@@ -169,8 +169,8 @@ class alpha_stable_gen(rv_continuous):
 class multivariate_alpha_stable_gen(multi_rv_generic):
     def rvs(self,
         alpha: float,
-        shift: np.ndarray = 0,
         spectral_measure_sampler: BaseSpectralMeasureSampler | Literal["standard_isotropic_2d", "standard_isotropic_3d", "1x2_elliptic_2d", "1x2x4_elliptic_3d", "coin_flip_discrete"] = "standard_isotropic_2d",
+        shift: np.ndarray = 0,
         size: int | None = None,
         random_state: None | int | np.random.RandomState | np.random.Generator = None,
     ):

@@ -1,14 +1,14 @@
 import aub_htp as ht
-from aub_htp import DiscreteSampler
-from aub_htp.random import BaseSpectralMeasureSampler, IsotropicSampler, EllipticSampler, MixedSampler
+from aub_htp.random import IsotropicSampler, EllipticSampler, DiscreteSampler, MixedSampler
 
+alpha = 1.2
 
-isotropic = IsotropicSampler(2, 1.2, 2)
-elliptic = EllipticSampler(2, 1,[[10, 2], [2, 50]])
-discrete = DiscreteSampler([1, 3], [0.2, 0.8])
-mixed = MixedSampler([isotropic, elliptic], [0.2, 0.8])
+isotropic = IsotropicSampler(number_of_dimensions = 2 , alpha = alpha, gamma = 2)
+elliptic = EllipticSampler(number_of_dimensions = 2, alpha = alpha, sigma = [[10, 2], [2, 50]])
+discrete = DiscreteSampler(positions = [[0, 1], [-1, 0]],  weights = [0.2, 0.8])
 
+mixed = MixedSampler(spectral_measures = [isotropic, elliptic, discrete], weights = [0.4, 0.4, 0.2])
 
-samples = ht.multivariate_alpha_stable.rvs(1.2, 0, "coin_flip_discrete", 10)
+samples = ht.multivariate_alpha_stable.rvs(alpha = 1.2, spectral_measure_sampler = mixed, shift = 0, size = 10)
 
 print(samples)

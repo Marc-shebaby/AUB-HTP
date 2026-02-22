@@ -9,7 +9,7 @@ def sample_alpha_stable_vector(
     spectral_measure: BaseSpectralMeasureSampler,
     number_of_samples: int = 1,
     shift_vector: np.ndarray = 0,
-    max_number_of_convergence_terms: int = 10000,
+    max_number_of_convergence_terms: int = 100000,
     error: float = 0.01,
     random_state: None | int | np.random.RandomState | np.random.Generator = None
 ):
