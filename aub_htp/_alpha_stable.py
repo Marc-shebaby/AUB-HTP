@@ -7,7 +7,7 @@ from scipy.stats._multivariate import multi_rv_generic
 from scipy.stats._distn_infrastructure import _ShapeInfo
 
 from .pdf import generate_alpha_stable_pdf
-from .random import sample_alpha_stable_vector, IsotropicSampler, UnivariateSampler, BaseSpectralMeasureSampler
+from .random import sample_alpha_stable_vector, IsotropicSampler, UnivariateSampler, EllipticSampler, DiscreteSampler, BaseSpectralMeasureSampler
 
 
 class alpha_stable_gen(rv_continuous):
@@ -130,7 +130,8 @@ class alpha_stable_gen(rv_continuous):
                 alpha_,
                 sampler,
                 number_of_samples_for_this_pair,
-                shift_vector=shift_
+                shift_,
+                random_state = random_state,
             )
 
             # Assign samples to all rows that share this (alpha, beta) pair
@@ -152,7 +153,6 @@ class alpha_stable_gen(rv_continuous):
         return self._vectorized_rvs(alpha, beta, gamma, delta, self.parameterization, size=size, random_state=random_state)
 
 
-
     def _get_shift_term(self, alpha: float, beta: float, gamma: float, delta: float, parameterization: Literal["S0", "S1"] | None = None) -> float:
         parameterization = parameterization or self.parameterization
         if parameterization == "S0":
@@ -169,19 +169,38 @@ class alpha_stable_gen(rv_continuous):
 class multivariate_alpha_stable_gen(multi_rv_generic):
     def rvs(self,
         alpha: float,
+        spectral_measure_sampler: BaseSpectralMeasureSampler | Literal["standard_isotropic_2d", "standard_isotropic_3d", "1x2_elliptic_2d", "1x2x4_elliptic_3d", "coin_flip_discrete"] = "standard_isotropic_2d",
         shift: np.ndarray = 0,
-        spectral_measure_sampler: BaseSpectralMeasureSampler | Literal["standard_isotropic_2d"] = "standard_isotropic_2d",
         size: int | None = None,
-        number_of_convergence_terms: int | None= None,
         random_state: None | int | np.random.RandomState | np.random.Generator = None,
     ):
-        if spectral_measure_sampler == "standard_isotropic_2d":
-            spectral_measure_sampler = IsotropicSampler(2, alpha, 1)
+        spectral_measure_sampler = self._check_spectral_measure_sampler(alpha, spectral_measure_sampler)
         assert isinstance(spectral_measure_sampler, BaseSpectralMeasureSampler)
-        samples = sample_alpha_stable_vector(alpha, spectral_measure_sampler, size or 1, shift, number_of_convergence_terms)
+        samples = sample_alpha_stable_vector(alpha, spectral_measure_sampler, size or 1, shift, random_state = random_state)
         if size is None:
             return samples[0]
         return samples
+
+    def _check_spectral_measure_sampler(self, alpha: float, spectral_measure_sampler: BaseSpectralMeasureSampler | str) -> BaseSpectralMeasureSampler:
+        if isinstance(spectral_measure_sampler, BaseSpectralMeasureSampler):
+            return spectral_measure_sampler
+
+        if spectral_measure_sampler == "standard_isotropic_2d":
+            return IsotropicSampler(2, alpha, 1)
+
+        if spectral_measure_sampler == "standard_isotropic_3d":
+            return IsotropicSampler(3, alpha, 1)
+
+        if spectral_measure_sampler == "1x2_elliptic_2d":
+            return EllipticSampler(2, alpha, sigma=[[1, 0], [0, 2]])
+
+        if spectral_measure_sampler == "1x2x4_elliptic_3d":
+            return EllipticSampler(3, alpha, sigma=[[1, 0, 0], [0, 2, 0], [0, 0, 4]])
+
+        if spectral_measure_sampler == "coin_flip_discrete":
+            return DiscreteSampler(alpha, [-1, 1], [0.5, 0.5])
+
+        raise ValueError("Unknown spectral measure sampler")
 
 def _sanitize_array_args(*args):
     assert len(args) > 0
