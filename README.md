@@ -37,7 +37,7 @@ ht.alpha_stable.with_parametrization("S0")
 y = ht.alpha_stable.pdf(x, alpha = 0.4, beta = 0.8, loc = 2, scale = 3)
 ```
 
-// Plot of each parametrization
+// TODO: Plot of each parametrization
 #### Random Variable Sampling (RVS)
 ```python
 import aub_htp as ht
@@ -59,6 +59,8 @@ print(samples)
 # [[  3.23516232   2.69285354   6.42379299   2.47262474   0.9449036 ]
 #  [259.96755723   0.6227459  118.69956139   3.63961872   3.45083368]]
 ```
+
+// TODO: Plot
 
 ### Multivariate Alpha Stable Distributions
 
@@ -117,7 +119,7 @@ print(samples)
 
 #### Custom Spectral Measures
 
-You can also add to the standard library collection by extending the ase class `BaseSpectralMeasureSampler`.
+You can also extend the standard library collection by extending the base class `BaseSpectralMeasureSampler`.
 
 ```python
 import aub_htp as ht
@@ -150,5 +152,6 @@ class ButterflySampler(BaseSpectralMeasureSampler):
 
 samples = ht.multivariate_alpha_stable.rvs(alpha = 0.8, spectral_measure_sampler=ButterflySampler(), size = 10000)
 ```
+// TODO: add plot
 
 ### Papers and Further Readings
