@@ -1,3 +1,4 @@
+SPDX-License-Identifier: GPL-3.0-or-later
 # AUB-HTP
 
 American University of Beirut's Heavy Tails Package (AUB-HTP) aims to provide a modern python toolkit for analyzing Alpha Stable Distributions (also called Levy-Stable distributions)
