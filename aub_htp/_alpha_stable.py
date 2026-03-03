@@ -138,7 +138,8 @@ class alpha_stable_gen(rv_continuous):
 
     @staticmethod
     def _single_valued_rvs(alpha_, beta_, gamma_, shift_, size, random_state):
-        if alpha_ >= 1 and beta_ != 0 or estimate_number_of_convergence_terms(0.01, alpha_, gamma_**alpha_) >= 50000:
+        # patch: always use CMS sampler for now
+        if True or alpha_ >= 1 and beta_ != 0 or estimate_number_of_convergence_terms(0.01, alpha_, gamma_**alpha_) >= 50000:
             logging.debug(f"Using CMS sampler for alpha = {alpha_}, beta = {beta_}")
             samples = sample_cms(alpha_, beta_, size, random_state)
             return samples * gamma_ + shift_
