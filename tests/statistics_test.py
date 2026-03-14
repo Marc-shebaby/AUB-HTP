@@ -15,7 +15,7 @@ class TestAlphaPowerCorrectness:
         ...
     
     @pytest.mark.parametrize(
-        "alpha", "scale", 
+        ("alpha", "scale"), 
         [
             (0.2, -0.4),
             (0.5, 2),
