@@ -1,6 +1,6 @@
 from functools import lru_cache
 from scipy.optimize import minimize
-from scipy.stats import levy_stable as alpha_stable
+import aub_htp as ht
 from scipy import special
 import numpy as np
 
@@ -9,7 +9,7 @@ def isotropic_pdf(data: np.ndarray, alpha: float) -> np.ndarray:
     assert data.ndim == 2
     _, dimensions = data.shape
     if dimensions == 1:
-        return alpha_stable.pdf(data.ravel(), alpha, 0, loc = 0, scale = (1 / alpha) ** (1 / alpha))
+        return ht.alpha_stable.pdf(data.ravel(), alpha, 0, loc = 0, scale = (1 / alpha) ** (1 / alpha))
     else:
         squared_norm = np.sum(data ** 2, axis=1)
         if alpha == 2:
@@ -26,7 +26,7 @@ def isotropic_pdf(data: np.ndarray, alpha: float) -> np.ndarray:
 @lru_cache(maxsize=None)
 def isotropic_entropy(dimensions: int, alpha: float) -> float:
     if dimensions == 1:
-        return alpha_stable.entropy(alpha, 0, loc = 0, scale = (1 / alpha) ** (1 / alpha))
+        return ht.alpha_stable.entropy(alpha, 0, loc = 0, scale = (1 / alpha) ** (1 / alpha))
     else:
         if alpha == 2:
             # Normal distribution: N(0, I)
