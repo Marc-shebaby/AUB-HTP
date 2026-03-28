@@ -28,16 +28,13 @@ class HeavyTailedCovariance(BaseEstimator):
         elif self.method == "method2":
             result = estimate_shape_method2(X, alpha=alpha)
         elif self.method == "method3":
-            result = estimate_shape_method3(X, alpha=alpha)
+            shape = estimate_shape_method3(X, alpha=alpha)
         else:
             raise ValueError(
                 f"method must be one of {get_args(MethodLiteral)}, got {self.method!r}."
             )
 
-        self.location_ = result["location"]
-        self.scale_ = result["scale"]
-        self.correlation_ = result["correlation"]
-        self.covariance_ = result["shape"]
+        self.covariance_ = shape
 
         return self
 
