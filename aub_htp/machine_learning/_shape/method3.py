@@ -1,5 +1,5 @@
 import numpy as np
-from aub_htp.statistics import alpha_location, alpha_power
+from .utils import estimate_marginals
 
 epsilon = np.finfo(float).tiny
 
@@ -13,26 +13,10 @@ def estimate_shape_method3(data: np.ndarray, alpha_kernel: float, alpha_data: fl
     small_sigma = estimate_marginals(data, alpha_kernel=alpha_kernel, alpha_data=alpha_data)
     A_hat = estimate_A_hat_by_lln(data, small_sigma)
     data_normalized = data / np.maximum(np.sqrt(A_hat)[:, None], epsilon)
-    sigma = data_normalized.T @ data_normalized / n_samples
+    shape_matrix = data_normalized.T @ data_normalized / n_samples
     if data_is_one_dimensional:
-        sigma = sigma.item()
-    return sigma
-
-
-def estimate_marginals(data: np.ndarray, alpha_kernel: float, alpha_data: float) -> np.ndarray:
-    data = np.asarray(data)
-    _n_samples, n_features = data.shape
-
-    location = np.empty(n_features, dtype=float)
-    power = np.empty(n_features, dtype=float)
-    
-    for feature in range(n_features):
-        data_feature = data[:, feature]
-        location[feature] = alpha_location(data_feature, alpha_kernel)
-        power[feature] = alpha_power(data_feature - location[feature], alpha_kernel)
-
-    small_sigma = float(np.sqrt(2.0) / (alpha_data ** (1.0 / alpha_data))) * power
-    return small_sigma 
+        return shape_matrix.item()
+    return shape_matrix
 
 
 def estimate_A_hat_by_lln(data: np.ndarray, small_sigma: np.ndarray) -> float:

@@ -62,6 +62,7 @@ class HeavyTailedPCA(TransformerMixin, BaseEstimator):
         X_centered = X - self.covariance_estimator_.location_
         return X_centered @ self.components_.T
 
+
     def _resolve_n_components(self, n_features: int) -> int:
         if self.n_components is None:
             return n_features

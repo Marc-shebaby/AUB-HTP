@@ -5,6 +5,8 @@ from sklearn.utils.validation import validate_data
 
 from ._shape import (
     MethodLiteral,
+    estimate_shape_method1,
+    estimate_shape_method2,
     estimate_shape_method3,
 )
 
@@ -39,4 +41,5 @@ class HeavyTailedCovariance(BaseEstimator):
         return self
 
     def score(self, X, y=None):
+        # TODO: ask profs about a scoring mechanism
         raise NotImplementedError()
