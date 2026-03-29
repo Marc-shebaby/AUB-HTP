@@ -351,17 +351,16 @@ def generate_alpha_stable_pdf_wrap(X, alpha, beta, gamma, delta, pad_left=10, pa
 
 @lru_cache(maxsize=128)
 def get_interpolator(alpha, beta):
-    not_quite_0 = np.finfo(float).eps
     x = np.linspace(-1, 1, 10000) 
     x = 50 * np.sign(x) * (np.abs(x) ** 10) #TODO: ask profs if this range is good
     y = generate_alpha_stable_pdf_wrap(x, alpha, beta, 1, 0)
-    y = np.maximum(y, not_quite_0)
+    y = np.maximum(y, 0)
     return interp1d(
         x,
         y,
         kind='cubic',
         bounds_error=False,
-        fill_value=not_quite_0
+        fill_value=0
     )
 
 def generate_alpha_stable_pdf(X, alpha, beta, gamma, delta):

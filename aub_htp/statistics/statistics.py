@@ -50,9 +50,10 @@ def alpha_power(data: np.ndarray, alpha: float) -> float:
     
     _, dimensions = data.shape
     entropy = isotropic_entropy(dimensions, alpha)
-
+    epsilon = np.finfo(float).eps
     def objective_function(power: float) -> float:
-        log_pdf = -np.log(isotropic_pdf(data / power, alpha))  
+        pdf = np.maximum(isotropic_pdf(data / power, alpha), epsilon)
+        log_pdf = -np.log(pdf)  
         expected_log_pdf = np.mean(log_pdf)
         return (expected_log_pdf - entropy)**2
 
@@ -99,18 +100,16 @@ def alpha_location(data: np.ndarray, alpha: float) -> np.ndarray:
     _, dimensions = data.shape
 
     entropy = isotropic_entropy(dimensions, alpha)
+    epsilon = np.finfo(float).eps
     penalty = 1e6
-
+    
     def objective_function(log_power_and_location: np.ndarray) -> float: #TODO: ask profs about this objective function
         power = log_power_and_location[0]
         location = log_power_and_location[1:]
         if power < 0:
             return np.inf
 
-        pdf = isotropic_pdf((data - location) / power, alpha)
-        if np.any(pdf <= 0):
-            print(((data - location) / power)[pdf<=0])
-
+        pdf = np.maximum(isotropic_pdf((data - location) / power, alpha), epsilon)
         log_pdf = -np.log(pdf)  
         residual = np.mean(log_pdf) - entropy
 
