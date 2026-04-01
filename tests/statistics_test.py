@@ -32,7 +32,7 @@ def _sample_multivariate_cauchy(
 
 
 class TestAlphaPowerCorrectness:
-    def test_alpha_power_alpha_2_matches_normal_scale(self):
+    def test_alpha_power_alpha_2_matches_normal_scale(self): # Test alpha power with alpha=2
         rng = np.random.default_rng(0)
         true_scale = 3.0
         data = rng.normal(loc=0.0, scale=true_scale, size=4000)
