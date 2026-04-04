@@ -29,8 +29,8 @@ from .statistics import (
 from .machine_learning import (
     AlphaStableLinearRegressor,
     AlphaStableKMeans,
-    HeavyTailedShape,
-    HeavyTailedPCA,
+    AlphaStableShape,
+    AlphaStablePCA,
     l_alpha_loss,
     r_alpha_score,
 )

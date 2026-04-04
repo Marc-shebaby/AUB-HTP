@@ -1,16 +1,17 @@
-from typing import get_args
+from typing import get_args, Literal
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import validate_data
 
-from ._shape import (
-    MethodLiteral,
-    estimate_shape_method1,
-    estimate_shape_method2,
-    estimate_shape_method3,
-)
 
-class HeavyTailedShape(BaseEstimator):
+MethodLiteral = Literal["method1", "method2", "method3"]
+
+from .method1 import estimate_shape_method1
+from .method2 import estimate_shape_method2
+from .method3 import estimate_shape_method3
+
+
+class AlphaStableShape(BaseEstimator):
     def __init__(self, alpha: float = 1.0, alpha_kernel: float = None, alpha_data: float = None, method: MethodLiteral = "method1"):
         self.alpha = alpha
         self.alpha_kernel = alpha_kernel
