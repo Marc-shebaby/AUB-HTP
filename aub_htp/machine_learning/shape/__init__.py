@@ -1,7 +1,4 @@
-from typing import Literal
-
-from .shape import AlphaStableShape
-
-__all__ = [
-    "AlphaStableShape",
-]
+from .shape import (
+    AlphaStableShape as AlphaStableShape, 
+    MethodLiteral as MethodLiteral
+)
