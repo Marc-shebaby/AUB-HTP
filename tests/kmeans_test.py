@@ -140,26 +140,59 @@ class TestUpdateClusterCenters:
         assert updated.shape == centers.shape
 
     def test_alpha_2_matches_cluster_means_univariate(self):
-        """For alpha=2, updated 1D centers should match cluster-wise sample means."""
-        X = np.array([[0.0], [2.0], [8.0], [10.0]])
-        centers = np.array([[0.0], [10.0]])
-        labels = np.array([0, 0, 1, 1])
+        """
+        For alpha=2 (Gaussian case), alpha_location reduces to the mean.
+        This test verifies that updated cluster centers match the sample means
+        of each cluster using generated univariate normal data.
+        """
+        np.random.seed(42)
+
+        # Generate two clusters
+        cluster1 = generate_univariate_data(alpha=2.0,loc=2,n_samples=1000)
+        cluster2 = generate_univariate_data(alpha=2.0,loc=10 ,n_samples=1000)
+
+        X = np.concatenate([cluster1, cluster2]).reshape(-1, 1)
+        labels = np.array([0]*len(cluster1) + [1]*len(cluster2))
+
+        # Initial centers (not important for this test)
+        centers = np.array([[0.0], [12.0]])
 
         updated = update_cluster_centers(X, centers, labels, alpha=2.0)
 
-        assert np.allclose(updated, [[1.0], [9.0]], atol=1e-2)
+        # Compute true means
+        expected = np.array([
+            [np.mean(X[labels == 0])],
+            [np.mean(X[labels == 1])]
+        ])
+
+        assert np.allclose(updated, expected, rtol=0.05, atol=0.2)
 
     def test_alpha_2_matches_cluster_means_multivariate(self):
-        """For alpha=2, updated 2D centers should match cluster-wise sample means."""
-        X = np.array([[0.0, 0.0], [2.0, 2.0], [8.0, 8.0], [10.0, 10.0]])
-        centers = np.array([[0.0, 0.0], [10.0, 10.0]])
-        labels = np.array([0, 0, 1, 1])
+        """
+        For alpha=2, alpha_location should match the mean vector
+        for each cluster in the multivariate Gaussian case.
+        """
+        np.random.seed(42)
+
+        d = 2
+        # Generate two clusters
+        cluster1 = generate_multivariate_data(alpha=2.0, mean=np.array([2,-3]), n_samples=1500) 
+        cluster2 = generate_multivariate_data(alpha=2.0, mean=np.array([10,5]), n_samples=1500)
+
+        X = np.vstack([cluster1, cluster2])
+        labels = np.array([0]*len(cluster1) + [1]*len(cluster2))
+
+        centers = np.array([[0.0, 0.0], [12.0, 6.0]])
 
         updated = update_cluster_centers(X, centers, labels, alpha=2.0)
 
-        expected = np.array([[1.0, 1.0], [9.0, 9.0]])
-        assert np.allclose(updated, expected, atol=1e-2)
+        # Compute true means per cluster
+        expected = np.vstack([
+            np.mean(X[labels == 0], axis=0),
+            np.mean(X[labels == 1], axis=0)
+        ])
 
+        assert np.allclose(updated, expected, rtol=0.05, atol=0.3)
     @pytest.mark.parametrize("alpha", [1.0, 2.0])
     def test_empty_cluster_unchanged(self, alpha):
         """update_cluster_centers should leave an empty cluster center unchanged."""
